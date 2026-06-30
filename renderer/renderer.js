@@ -111,6 +111,7 @@ $('btnClearMedia').addEventListener('click', () => {
 // --- Kirim ------------------------------------------------------------------
 function updateSendButton() {
   $('btnSend').disabled = !(waReady && importedRows.length > 0);
+  updateGroupButton();
 }
 
 $('btnSend').addEventListener('click', async () => {
@@ -175,6 +176,109 @@ window.wa.onProgress((p) => {
   const who = p.number ? ` ${p.number}` : '';
   addLog(`${icon}${who} — ${p.message}`, p.status);
 });
+
+// --- Tambah ke Grup ---------------------------------------------------------
+$('btnRefreshGroups').addEventListener('click', async () => {
+  if (!waReady) { alert('Hubungkan WhatsApp dulu.'); return; }
+  $('btnRefreshGroups').disabled = true;
+  $('btnRefreshGroups').textContent = '⏳ Memuat...';
+  const res = await window.wa.listGroups();
+  $('btnRefreshGroups').disabled = false;
+  $('btnRefreshGroups').textContent = '🔄 Muat daftar grup';
+  if (!res.ok) { alert(res.error); return; }
+
+  const sel = $('groupSelect');
+  sel.innerHTML = '';
+  if (!res.groups.length) {
+    sel.innerHTML = '<option value="">(tidak ada grup)</option>';
+  } else {
+    res.groups.forEach((g) => {
+      const opt = document.createElement('option');
+      opt.value = g.id;
+      opt.textContent = `${g.name} (${g.count})${g.isAdmin ? ' • admin' : ' • bukan admin'}`;
+      opt.disabled = !g.isAdmin;
+      sel.appendChild(opt);
+    });
+    // pilih grup admin pertama
+    const firstAdmin = Array.from(sel.options).find((o) => !o.disabled);
+    if (firstAdmin) sel.value = firstAdmin.value;
+  }
+  updateGroupButton();
+});
+
+$('groupSelect').addEventListener('change', updateGroupButton);
+
+function updateGroupButton() {
+  const sel = $('groupSelect');
+  $('btnAddGroup').disabled = !(waReady && importedRows.length > 0 && sel.value);
+}
+
+$('btnAddGroup').addEventListener('click', async () => {
+  const sel = $('groupSelect');
+  if (!sel.value) { alert('Pilih grup dulu (dan kamu harus admin).'); return; }
+  if (!importedRows.length) { alert('Import file kontak dulu.'); return; }
+
+  const minD = Number($('minDelay').value);
+  const maxD = Number($('maxDelay').value);
+  if (maxD < minD) { alert('Jeda Max harus >= Min.'); return; }
+
+  const groupName = sel.options[sel.selectedIndex].textContent;
+  if (!confirm(`Tambahkan ${importedRows.length} kontak ke grup:\n${groupName}?\n\nJeda acak ${minD}-${maxD} detik. Yang privasinya tertutup akan dikirimi undangan.`)) return;
+
+  $('btnAddGroup').style.display = 'none';
+  $('btnCancelGroup').style.display = 'inline-block';
+  $('btnCancelGroup').disabled = false;
+  $('btnCancelGroup').textContent = 'Batalkan';
+  $('groupProgressWrap').style.display = 'block';
+  $('groupLog').innerHTML = '';
+  $('groupProgressBar').style.width = '0%';
+
+  const res = await window.wa.addToGroup({
+    rows: importedRows,
+    phoneColumn: $('phoneCol').value,
+    groupId: sel.value,
+    defaultCountry: $('country').value || '62',
+    minDelay: minD,
+    maxDelay: maxD,
+  });
+
+  $('btnAddGroup').style.display = 'inline-block';
+  $('btnCancelGroup').style.display = 'none';
+
+  if (!res.ok) { alert('Error: ' + res.error); return; }
+  addGroupLog(`Selesai — Ditambahkan: ${res.added}, Diundang: ${res.invited}, Gagal: ${res.failed}, Dilewati: ${res.skipped} dari ${res.total}` +
+    (res.cancelled ? ' (dibatalkan)' : ''), 'added');
+});
+
+$('btnCancelGroup').addEventListener('click', async () => {
+  await window.wa.cancel();
+  $('btnCancelGroup').disabled = true;
+  $('btnCancelGroup').textContent = 'Membatalkan...';
+});
+
+window.wa.onGroupProgress((p) => {
+  const pct = p.total ? Math.round(((p.index + 1) / p.total) * 100) : 0;
+  if (p.status !== 'waiting') $('groupProgressBar').style.width = pct + '%';
+  if (typeof p.added === 'number') {
+    $('groupCounters').innerHTML =
+      `<span class="ok">✅ ${p.added} ditambah</span>` +
+      `<span class="invite">✉️ ${p.invited} diundang</span>` +
+      `<span class="fail">❌ ${p.failed} gagal</span>` +
+      `<span class="skip">⏭️ ${p.skipped} dilewati</span>`;
+  }
+  const icons = { added: '✅', invited: '✉️', failed: '❌', skipped: '⏭️', waiting: '⏳', cancelled: '🛑' };
+  const icon = icons[p.status] || '•';
+  const who = p.number ? ` ${p.number}` : '';
+  addGroupLog(`${icon}${who} — ${p.message}`, p.status);
+});
+
+function addGroupLog(text, cls) {
+  const div = document.createElement('div');
+  div.className = 'line ' + (cls || '');
+  div.textContent = text;
+  $('groupLog').appendChild(div);
+  $('groupLog').scrollTop = $('groupLog').scrollHeight;
+}
 
 function addLog(text, cls) {
   const div = document.createElement('div');

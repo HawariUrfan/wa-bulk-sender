@@ -174,3 +174,8 @@ input[type="number"], input[type="text"] { width: auto; }
 .log .skipped { color: #e2b455; }
 .log .waiting { color: var(--muted); }
 .log .cancelled { color: var(--danger); }
+.log .added { color: var(--accent); }
+.log .invited { color: #6db3f2; }
+
+.sep { border: none; border-top: 1px solid var(--border); margin: 22px 0 4px; }
+.counters .invite { color: #6db3f2; }

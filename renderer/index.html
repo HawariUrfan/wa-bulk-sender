@@ -82,6 +82,29 @@
         <div id="counters" class="counters"></div>
         <div id="log" class="log"></div>
       </div>
+
+      <hr class="sep" />
+
+      <h2>5. Tambah Kontak ke Grup (opsional)</h2>
+      <p class="muted">Tambahkan nomor dari file di atas ke grup yang sudah ada. Kamu harus <b>admin</b> di grup itu. Pakai jeda anti-ban yang sama.</p>
+      <div class="row">
+        <button id="btnRefreshGroups" class="btn">🔄 Muat daftar grup</button>
+        <select id="groupSelect" style="min-width:220px;"><option value="">— belum dimuat —</option></select>
+      </div>
+      <div class="row">
+        <button id="btnAddGroup" class="btn primary" disabled>➕ Tambah ke Grup</button>
+        <button id="btnCancelGroup" class="btn danger" style="display:none;">Batalkan</button>
+      </div>
+      <div class="warn">
+        ⚠️ Banyak nomor tidak bisa langsung ditambahkan karena setelan privasi mereka —
+        WhatsApp hanya akan mengirim undangan. Menambah massal sangat berisiko diblokir;
+        lakukan dalam jumlah wajar.
+      </div>
+      <div id="groupProgressWrap" style="display:none;">
+        <div class="progress"><div id="groupProgressBar" class="progress-bar"></div></div>
+        <div id="groupCounters" class="counters"></div>
+        <div id="groupLog" class="log"></div>
+      </div>
     </section>
   </main>
 

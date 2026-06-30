@@ -306,6 +306,110 @@ ipcMain.handle('wa:send', async (_evt, opts) => {
   return { ok: true, sent, failed, skipped, total, cancelled: cancelRequested };
 });
 
+ipcMain.handle('wa:groups', async () => {
+  if (!clientReady) return { ok: false, error: 'WhatsApp belum terhubung.' };
+  try {
+    const chats = await waClient.getChats();
+    const myId = (waClient.info && waClient.info.wid && waClient.info.wid._serialized) || '';
+    const groups = chats
+      .filter((c) => c.isGroup)
+      .map((c) => {
+        let isAdmin = false;
+        try {
+          const me = (c.participants || []).find((p) => p.id && p.id._serialized === myId);
+          isAdmin = !!(me && (me.isAdmin || me.isSuperAdmin));
+        } catch (_) {}
+        return {
+          id: c.id._serialized,
+          name: c.name || '(tanpa nama)',
+          count: (c.participants || []).length,
+          isAdmin,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return { ok: true, groups };
+  } catch (e) {
+    return { ok: false, error: 'Gagal memuat grup: ' + e.message };
+  }
+});
+
+ipcMain.handle('wa:addToGroup', async (_evt, opts) => {
+  if (!clientReady) return { ok: false, error: 'WhatsApp belum terhubung.' };
+  if (sending) return { ok: false, error: 'Operasi lain sedang berjalan.' };
+
+  const { rows, phoneColumn, groupId, defaultCountry, minDelay, maxDelay } = opts;
+
+  let group;
+  try {
+    group = await waClient.getChatById(groupId);
+    if (!group || !group.isGroup) throw new Error('Bukan grup yang valid');
+  } catch (e) {
+    return { ok: false, error: 'Gagal membuka grup: ' + e.message };
+  }
+
+  sending = true;
+  cancelRequested = false;
+
+  const minMs = Math.max(0, Number(minDelay) || 0) * 1000;
+  const maxMs = Math.max(minMs, (Number(maxDelay) || 0) * 1000);
+
+  let added = 0, invited = 0, failed = 0, skipped = 0;
+  const total = rows.length;
+
+  for (let i = 0; i < rows.length; i++) {
+    if (cancelRequested) {
+      send('wa:groupProgress', { index: i, total, status: 'cancelled', message: 'Dibatalkan', added, invited, failed, skipped });
+      break;
+    }
+    const number = normalizeNumber(rows[i][phoneColumn], defaultCountry);
+    if (!number) {
+      skipped++;
+      send('wa:groupProgress', { index: i, total, number: rows[i][phoneColumn], status: 'skipped', message: 'Nomor tidak valid', added, invited, failed, skipped });
+      continue;
+    }
+    const chatId = number + '@c.us';
+
+    try {
+      const registered = await waClient.isRegisteredUser(chatId);
+      if (!registered) {
+        failed++;
+        send('wa:groupProgress', { index: i, total, number, status: 'failed', message: 'Tidak terdaftar di WhatsApp', added, invited, failed, skipped });
+      } else {
+        const result = await group.addParticipants([chatId], { autoSendInviteV4: true });
+        const entry = (result && (result[chatId] || result[number] || Object.values(result)[0])) || {};
+        const code = Number(entry.code);
+        if (code === 200) {
+          added++;
+          send('wa:groupProgress', { index: i, total, number, status: 'added', message: 'Ditambahkan ke grup', added, invited, failed, skipped });
+        } else if (code === 403 || entry.isInviteV4Sent) {
+          invited++;
+          send('wa:groupProgress', { index: i, total, number, status: 'invited', message: 'Tidak bisa langsung ditambah (privasi) — undangan dikirim', added, invited, failed, skipped });
+        } else if (code === 409) {
+          skipped++;
+          send('wa:groupProgress', { index: i, total, number, status: 'skipped', message: 'Sudah jadi anggota grup', added, invited, failed, skipped });
+        } else {
+          failed++;
+          send('wa:groupProgress', { index: i, total, number, status: 'failed', message: (entry.message || 'Gagal') + (code ? ` (kode ${code})` : ''), added, invited, failed, skipped });
+        }
+      }
+    } catch (e) {
+      failed++;
+      send('wa:groupProgress', { index: i, total, number, status: 'failed', message: e.message, added, invited, failed, skipped });
+    }
+
+    if (i < rows.length - 1 && !cancelRequested) {
+      const wait = minMs + Math.floor(Math.random() * (maxMs - minMs + 1));
+      if (wait > 0) {
+        send('wa:groupProgress', { index: i, total, status: 'waiting', message: `Jeda ${Math.round(wait / 1000)} detik...`, added, invited, failed, skipped });
+        await delay(wait);
+      }
+    }
+  }
+
+  sending = false;
+  return { ok: true, added, invited, failed, skipped, total, cancelled: cancelRequested };
+});
+
 // --- App lifecycle -----------------------------------------------------------
 
 app.whenReady().then(() => {
