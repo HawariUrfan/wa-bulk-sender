@@ -15,8 +15,13 @@ dengan import kontak dari **CSV / Excel**, personalisasi pesan, lampiran media, 
    ```
    npm start
    ```
+3.**Jalan Kan Aplikasi Lewat Installer ( Simple )**
+- Download file zip
+- Buka folder dist
+- Buka WA Bulk Sender Setup 1.0.0
+- Install
 
-3. Di aplikasi:
+4. Di aplikasi:
    - Klik **Hubungkan** → scan QR dengan WhatsApp di HP (Setelan → Perangkat tertaut).
      Sesi tersimpan, lain kali tidak perlu scan lagi.
    - Klik **Import CSV / Excel** → pilih file kontak. Pilih kolom nomor HP.
@@ -54,6 +59,7 @@ Hasil installer ada di folder `dist/`.
 - Untuk lebih aman: pakai jeda yang cukup, jangan kirim ke orang yang tidak mengenal
   kamu, hindari volume sangat besar dalam waktu singkat, dan dapatkan izin penerima.
 - Untuk pemakaian bisnis skala besar yang legal, gunakan **WhatsApp Business API resmi**.
+- Belum ditandatangani digital — installer ini tidak punya sertifikat code-signing (yang harganya ratusan ribu–jutaan/tahun). Tanpa itu, Windows SmartScreen & sebagian antivirus otomatis curiga ke file .exe baru yang belum dikenal.
 
 ## Teknologi
 
