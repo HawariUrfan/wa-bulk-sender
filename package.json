@@ -1,0 +1,33 @@
+{
+  "name": "wa-bulk-sender",
+  "version": "1.0.0",
+  "description": "Aplikasi desktop pengirim WhatsApp massal (bulk) dengan import CSV/Excel",
+  "main": "main.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.local.wabulksender",
+    "productName": "WA Bulk Sender",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "dependencies": {
+    "whatsapp-web.js": "^1.26.0",
+    "qrcode": "^1.5.4",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  }
+}

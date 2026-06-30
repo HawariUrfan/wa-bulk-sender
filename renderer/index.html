@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WA Bulk Sender</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">✉️</span>
+      <div>
+        <h1>WA Bulk Sender</h1>
+        <p class="sub">Kirim WhatsApp massal dari nomor pribadi — import CSV/Excel</p>
+      </div>
+    </div>
+    <div class="conn">
+      <span id="statusDot" class="dot dot-off"></span>
+      <span id="statusText">Belum terhubung</span>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- Kolom kiri: koneksi -->
+    <section class="card" id="connCard">
+      <h2>1. Hubungkan WhatsApp</h2>
+      <p class="muted">Scan QR sekali. Sesi tersimpan, lain kali tidak perlu scan lagi.</p>
+      <div id="qrBox" class="qrbox">
+        <div class="qr-placeholder">Klik "Hubungkan" untuk menampilkan QR</div>
+      </div>
+      <div class="row">
+        <button id="btnConnect" class="btn primary">Hubungkan</button>
+        <button id="btnLogout" class="btn ghost" disabled>Logout</button>
+      </div>
+      <div class="warn">
+        ⚠️ Mengirim massal dari nomor pribadi berisiko diblokir WhatsApp. Gunakan jeda yang
+        cukup, jangan kirim ke nomor yang tidak mengenal kamu, dan patuhi aturan WhatsApp.
+      </div>
+    </section>
+
+    <!-- Kolom kanan: kontak + pesan -->
+    <section class="card">
+      <h2>2. Kontak</h2>
+      <div class="row">
+        <button id="btnImport" class="btn">📂 Import CSV / Excel</button>
+        <span id="fileInfo" class="muted">Belum ada file</span>
+      </div>
+      <div class="row" id="colPickerRow" style="display:none;">
+        <label>Kolom nomor HP:
+          <select id="phoneCol"></select>
+        </label>
+        <label>Kode negara default:
+          <input id="country" type="text" value="62" size="4" />
+        </label>
+      </div>
+      <div id="contactPreview" class="preview"></div>
+
+      <h2>3. Pesan</h2>
+      <p class="muted">Gunakan <code>{nama}</code> atau nama kolom lain untuk personalisasi.</p>
+      <textarea id="message" rows="5" placeholder="Halo {nama}, ..."></textarea>
+
+      <div class="row">
+        <button id="btnMedia" class="btn">🖼️ Lampirkan media (opsional)</button>
+        <span id="mediaInfo" class="muted">Tidak ada lampiran</span>
+        <button id="btnClearMedia" class="btn ghost" style="display:none;">Hapus</button>
+      </div>
+
+      <h2>4. Jeda anti-ban</h2>
+      <div class="row">
+        <label>Min (detik): <input id="minDelay" type="number" value="5" min="0" size="4" /></label>
+        <label>Max (detik): <input id="maxDelay" type="number" value="15" min="0" size="4" /></label>
+      </div>
+
+      <div class="row send-row">
+        <button id="btnSend" class="btn primary big" disabled>🚀 Kirim ke Semua</button>
+        <button id="btnCancel" class="btn danger" style="display:none;">Batalkan</button>
+      </div>
+
+      <div id="progressWrap" style="display:none;">
+        <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+        <div id="counters" class="counters"></div>
+        <div id="log" class="log"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
