@@ -1,0 +1,9 @@
+Redesign UI (tab terpisah) + footer kredit & link GitHub
+
+- Layout dipisah jadi tab "Kirim Pesan" dan "Tambah ke Grup"
+- Langkah bernomor, kontak & jeda anti-ban dipakai bersama kedua tab
+- Teks petunjuk dinamis di bawah tombol aksi
+- Footer "Dibuat oleh Hawari Urfan" + link repo (buka di browser via shell.openExternal)
+- Bump versi ke 1.0.2
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

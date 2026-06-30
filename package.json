@@ -1,6 +1,6 @@
 {
   "name": "wa-bulk-sender",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Aplikasi desktop pengirim WhatsApp massal (bulk) dengan import CSV/Excel",
   "main": "main.js",
   "author": "",

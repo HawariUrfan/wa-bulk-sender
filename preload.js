@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('wa', {
   pickMedia: () => ipcRenderer.invoke('media:pick'),
   send: (opts) => ipcRenderer.invoke('wa:send', opts),
   cancel: () => ipcRenderer.invoke('wa:cancel'),
+  openExternal: (url) => ipcRenderer.invoke('app:openExternal', url),
   listGroups: () => ipcRenderer.invoke('wa:groups'),
   addToGroup: (opts) => ipcRenderer.invoke('wa:addToGroup', opts),
 

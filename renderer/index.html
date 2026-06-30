@@ -12,7 +12,7 @@
       <span class="logo">✉️</span>
       <div>
         <h1>WA Bulk Sender</h1>
-        <p class="sub">Kirim WhatsApp massal dari nomor pribadi — import CSV/Excel</p>
+        <p class="sub">Kirim WhatsApp massal dari nomor pribadi</p>
       </div>
     </div>
     <div class="conn">
@@ -22,91 +22,107 @@
   </header>
 
   <main class="grid">
-    <!-- Kolom kiri: koneksi -->
+    <!-- KIRI: Koneksi -->
     <section class="card" id="connCard">
-      <h2>1. Hubungkan WhatsApp</h2>
-      <p class="muted">Scan QR sekali. Sesi tersimpan, lain kali tidak perlu scan lagi.</p>
+      <h2><span class="step">1</span> Hubungkan WhatsApp</h2>
+      <p class="muted">Scan QR sekali pakai HP. Sesi tersimpan, lain kali tidak perlu scan lagi.</p>
       <div id="qrBox" class="qrbox">
         <div class="qr-placeholder">Klik "Hubungkan" untuk menampilkan QR</div>
       </div>
       <div class="row">
-        <button id="btnConnect" class="btn primary">Hubungkan</button>
+        <button id="btnConnect" class="btn primary block">🔗 Hubungkan</button>
         <button id="btnLogout" class="btn ghost" disabled>Logout</button>
       </div>
       <div class="warn">
-        ⚠️ Mengirim massal dari nomor pribadi berisiko diblokir WhatsApp. Gunakan jeda yang
-        cukup, jangan kirim ke nomor yang tidak mengenal kamu, dan patuhi aturan WhatsApp.
+        ⚠️ Mengirim/menambah massal dari nomor pribadi berisiko diblokir WhatsApp.
+        Pakai jeda yang cukup dan lakukan dalam jumlah wajar.
       </div>
     </section>
 
-    <!-- Kolom kanan: kontak + pesan -->
+    <!-- KANAN: Kontak + Tab aksi -->
     <section class="card">
-      <h2>2. Kontak</h2>
+      <h2><span class="step">2</span> Pilih Kontak <span class="hint">(dipakai untuk kirim & grup)</span></h2>
       <div class="row">
         <button id="btnImport" class="btn">📂 Import CSV / Excel</button>
-        <span id="fileInfo" class="muted">Belum ada file</span>
+        <span id="fileInfo" class="badge-muted">Belum ada file</span>
       </div>
       <div class="row" id="colPickerRow" style="display:none;">
-        <label>Kolom nomor HP:
+        <label>Kolom nomor HP
           <select id="phoneCol"></select>
         </label>
-        <label>Kode negara default:
+        <label>Kode negara
           <input id="country" type="text" value="62" size="4" />
         </label>
       </div>
       <div id="contactPreview" class="preview"></div>
 
-      <h2>3. Pesan</h2>
-      <p class="muted">Gunakan <code>{nama}</code> atau nama kolom lain untuk personalisasi.</p>
-      <textarea id="message" rows="5" placeholder="Halo {nama}, ..."></textarea>
-
-      <div class="row">
-        <button id="btnMedia" class="btn">🖼️ Lampirkan media (opsional)</button>
-        <span id="mediaInfo" class="muted">Tidak ada lampiran</span>
-        <button id="btnClearMedia" class="btn ghost" style="display:none;">Hapus</button>
+      <div class="row delay-row">
+        <span class="delay-label">⏱️ Jeda anti-ban:</span>
+        <label>Min <input id="minDelay" type="number" value="5" min="0" size="3" /> dtk</label>
+        <label>Max <input id="maxDelay" type="number" value="15" min="0" size="3" /> dtk</label>
       </div>
 
-      <h2>4. Jeda anti-ban</h2>
-      <div class="row">
-        <label>Min (detik): <input id="minDelay" type="number" value="5" min="0" size="4" /></label>
-        <label>Max (detik): <input id="maxDelay" type="number" value="15" min="0" size="4" /></label>
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="kirim">📨 Kirim Pesan</button>
+        <button class="tab-btn" data-tab="grup">👥 Tambah ke Grup</button>
       </div>
 
-      <div class="row send-row">
-        <button id="btnSend" class="btn primary big" disabled>🚀 Kirim ke Semua</button>
-        <button id="btnCancel" class="btn danger" style="display:none;">Batalkan</button>
+      <!-- TAB: KIRIM PESAN -->
+      <div class="tab-panel active" id="tab-kirim">
+        <h3><span class="step">3</span> Tulis Pesan</h3>
+        <p class="muted">Gunakan <code>{nama}</code> atau nama kolom lain untuk personalisasi.</p>
+        <textarea id="message" rows="5" placeholder="Halo {nama}, ..."></textarea>
+        <div class="row">
+          <button id="btnMedia" class="btn">🖼️ Lampirkan media</button>
+          <span id="mediaInfo" class="badge-muted">Tidak ada lampiran</span>
+          <button id="btnClearMedia" class="btn ghost" style="display:none;">Hapus</button>
+        </div>
+        <div class="row send-row">
+          <button id="btnSend" class="btn primary big" disabled>🚀 Kirim ke Semua</button>
+          <button id="btnCancel" class="btn danger" style="display:none;">Batalkan</button>
+        </div>
+        <p id="sendHint" class="hint-line">Hubungkan WhatsApp & import kontak dulu untuk mengaktifkan.</p>
+        <div id="progressWrap" style="display:none;">
+          <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+          <div id="counters" class="counters"></div>
+          <div id="log" class="log"></div>
+        </div>
       </div>
 
-      <div id="progressWrap" style="display:none;">
-        <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
-        <div id="counters" class="counters"></div>
-        <div id="log" class="log"></div>
-      </div>
-
-      <hr class="sep" />
-
-      <h2>5. Tambah Kontak ke Grup (opsional)</h2>
-      <p class="muted">Tambahkan nomor dari file di atas ke grup yang sudah ada. Kamu harus <b>admin</b> di grup itu. Pakai jeda anti-ban yang sama.</p>
-      <div class="row">
-        <button id="btnRefreshGroups" class="btn">🔄 Muat daftar grup</button>
-        <select id="groupSelect" style="min-width:220px;"><option value="">— belum dimuat —</option></select>
-      </div>
-      <div class="row">
-        <button id="btnAddGroup" class="btn primary" disabled>➕ Tambah ke Grup</button>
-        <button id="btnCancelGroup" class="btn danger" style="display:none;">Batalkan</button>
-      </div>
-      <div class="warn">
-        ⚠️ Banyak nomor tidak bisa langsung ditambahkan karena setelan privasi mereka —
-        WhatsApp hanya akan mengirim undangan. Menambah massal sangat berisiko diblokir;
-        lakukan dalam jumlah wajar.
-      </div>
-      <div id="groupProgressWrap" style="display:none;">
-        <div class="progress"><div id="groupProgressBar" class="progress-bar"></div></div>
-        <div id="groupCounters" class="counters"></div>
-        <div id="groupLog" class="log"></div>
+      <!-- TAB: TAMBAH KE GRUP -->
+      <div class="tab-panel" id="tab-grup">
+        <h3><span class="step">3</span> Pilih Grup</h3>
+        <p class="muted">Tambahkan nomor dari file ke grup yang sudah ada. Kamu harus <b>admin</b> di grup itu.</p>
+        <div class="row">
+          <button id="btnRefreshGroups" class="btn">🔄 Muat daftar grup</button>
+          <select id="groupSelect" style="min-width:240px;"><option value="">— belum dimuat —</option></select>
+        </div>
+        <div class="row send-row">
+          <button id="btnAddGroup" class="btn primary big" disabled>➕ Tambah ke Grup</button>
+          <button id="btnCancelGroup" class="btn danger" style="display:none;">Batalkan</button>
+        </div>
+        <p id="groupHint" class="hint-line">Hubungkan, import kontak, lalu muat & pilih grup.</p>
+        <div class="warn">
+          ⚠️ Banyak nomor tidak bisa langsung ditambahkan karena setelan privasinya —
+          WhatsApp hanya mengirim undangan. Lakukan dalam jumlah wajar.
+        </div>
+        <div id="groupProgressWrap" style="display:none;">
+          <div class="progress"><div id="groupProgressBar" class="progress-bar"></div></div>
+          <div id="groupCounters" class="counters"></div>
+          <div id="groupLog" class="log"></div>
+        </div>
       </div>
     </section>
   </main>
+
+  <footer class="appfoot">
+    <span>Dibuat oleh <b>Hawari Urfan</b></span>
+    <span class="dot-sep">•</span>
+    <a id="ghLink" href="#" class="gh-link" data-url="https://github.com/HawariUrfan/wa-bulk-sender">
+      🔗 github.com/HawariUrfan/wa-bulk-sender
+    </a>
+  </footer>
 
   <script src="renderer.js"></script>
 </body>

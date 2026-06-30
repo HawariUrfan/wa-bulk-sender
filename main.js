@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const qrcode = require('qrcode');
@@ -211,6 +211,11 @@ ipcMain.handle('media:pick', async () => {
   });
   if (result.canceled || !result.filePaths.length) return { canceled: true };
   return { canceled: false, filePath: result.filePaths[0], fileName: path.basename(result.filePaths[0]) };
+});
+
+ipcMain.handle('app:openExternal', (_evt, url) => {
+  if (typeof url === 'string' && /^https?:\/\//i.test(url)) shell.openExternal(url);
+  return { ok: true };
 });
 
 ipcMain.handle('wa:cancel', () => {

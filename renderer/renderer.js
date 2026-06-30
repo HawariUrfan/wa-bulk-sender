@@ -3,6 +3,19 @@ let importedRows = [];
 let headers = [];
 let mediaPath = null;
 
+// Fallback stub agar UI bisa dipratinjau di browser biasa (di Electron asli,
+// window.wa selalu tersedia dari preload, jadi blok ini tidak berpengaruh).
+if (!window.wa) {
+  const noop = () => {};
+  const noopAsync = async () => ({ ok: false, error: 'preview' });
+  window.wa = {
+    init: noopAsync, logout: noopAsync, state: noopAsync, importFile: noopAsync,
+    pickMedia: noopAsync, send: noopAsync, cancel: noopAsync,
+    openExternal: noopAsync, listGroups: noopAsync, addToGroup: noopAsync,
+    onStatus: noop, onQr: noop, onReady: noop, onProgress: noop, onGroupProgress: noop,
+  };
+}
+
 const $ = (id) => document.getElementById(id);
 
 // --- Koneksi ----------------------------------------------------------------
@@ -109,8 +122,29 @@ $('btnClearMedia').addEventListener('click', () => {
 });
 
 // --- Kirim ------------------------------------------------------------------
+// --- Tab switching ----------------------------------------------------------
+document.querySelectorAll('.tab-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+    btn.classList.add('active');
+    $('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
 function updateSendButton() {
-  $('btnSend').disabled = !(waReady && importedRows.length > 0);
+  const ok = waReady && importedRows.length > 0;
+  $('btnSend').disabled = !ok;
+  const hint = $('sendHint');
+  if (ok) {
+    hint.textContent = `Siap kirim ke ${importedRows.length} kontak.`;
+    hint.classList.add('ready');
+  } else {
+    hint.textContent = !waReady
+      ? 'Hubungkan WhatsApp dulu (langkah 1).'
+      : 'Import kontak dulu (langkah 2).';
+    hint.classList.remove('ready');
+  }
   updateGroupButton();
 }
 
@@ -210,7 +244,21 @@ $('groupSelect').addEventListener('change', updateGroupButton);
 
 function updateGroupButton() {
   const sel = $('groupSelect');
-  $('btnAddGroup').disabled = !(waReady && importedRows.length > 0 && sel.value);
+  const ok = waReady && importedRows.length > 0 && !!sel.value;
+  $('btnAddGroup').disabled = !ok;
+  const hint = $('groupHint');
+  if (!hint) return;
+  if (ok) {
+    hint.textContent = `Siap tambahkan ${importedRows.length} kontak ke grup terpilih.`;
+    hint.classList.add('ready');
+  } else {
+    hint.textContent = !waReady
+      ? 'Hubungkan WhatsApp dulu (langkah 1).'
+      : (importedRows.length === 0
+        ? 'Import kontak dulu (langkah 2).'
+        : 'Klik "Muat daftar grup" lalu pilih grup (kamu harus admin).');
+    hint.classList.remove('ready');
+  }
 }
 
 $('btnAddGroup').addEventListener('click', async () => {
@@ -292,3 +340,15 @@ function escapeHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+// Link GitHub di footer → buka di browser default
+const ghLink = $('ghLink');
+if (ghLink) {
+  ghLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.wa.openExternal(ghLink.dataset.url);
+  });
+}
+
+// Inisialisasi teks petunjuk saat aplikasi dibuka
+updateSendButton();
